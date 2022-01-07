@@ -1,10 +1,5 @@
-﻿using DogsAppAPI.DB;
-using DogsAppAPI.Web.Services;
+﻿using DogsAppAPI.Web.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace DogsAppAPI.Web.Controllers

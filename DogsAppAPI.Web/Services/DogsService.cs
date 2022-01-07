@@ -1,9 +1,6 @@
 ﻿using DogsAppAPI.DB;
 using DogsAppAPI.Interfaces;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace DogsAppAPI.Web.Services

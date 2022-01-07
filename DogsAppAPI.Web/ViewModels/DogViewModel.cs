@@ -1,7 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System;
-
-namespace DogsAppAPI.DB
+﻿namespace DogsAppAPI.DB
 {
     public class DogViewModel
     {

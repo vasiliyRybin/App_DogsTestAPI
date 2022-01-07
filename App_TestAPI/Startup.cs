@@ -1,7 +1,12 @@
+using DogsAppAPI.DB.Models;
+using DogsAppAPI.Interfaces;
+using DogsAppAPI.Web.Services;
+using HappyBusProject.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -23,18 +28,23 @@ namespace App_TestAPI
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "App_TestAPI", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "DogsAPI", Version = "Version 1.0.1" });
             });
+
+            services.AddDbContext<DogsDbContext>(options => options
+            .UseSqlServer(Environment.GetEnvironmentVariable("DogsAppDBConnectionString", EnvironmentVariableTarget.Machine)));
+
+            services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
+            services.AddTransient<DogsService>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

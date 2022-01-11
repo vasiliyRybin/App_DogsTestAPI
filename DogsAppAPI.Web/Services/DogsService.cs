@@ -1,6 +1,8 @@
 ﻿using DogsAppAPI.DB;
 using DogsAppAPI.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -16,49 +18,40 @@ namespace DogsAppAPI.Web.Services
             DogsRepo = repository;
         }
 
-        public async Task<DogExternalModel[]> GetAllDogs(PageParams pageParams)
+        public async Task<List<DogExternalModel>> GetAllDogs(PageParams pageParams)
         {
             AssignDefaultParamsToEmptyInputFields(pageParams);
-            var dogs = await DogsRepo.Get();
+            var dogs = DogsRepo.GetAsync();
+            var orderBy = typeof(Dog).GetProperties()
+                .FirstOrDefault(x => x.Name.ToLower() == pageParams.Attribute.ToLower());
 
-            if (dogs.Any())
+            var propName = orderBy?.Name ?? "Name";
+
+            dogs = pageParams.Order == "desc" ?
+                dogs.OrderByDescending(x => EF.Property<object>(x, propName)) :
+                dogs.OrderBy(x => EF.Property<object>(x, propName));
+
+            dogs = dogs.Skip((pageParams.PageNumber - 1) * pageParams.PageSize)
+                .Take(pageParams.PageSize);
+
+            var dogsResult = await dogs.ToListAsync();
+
+            List<DogExternalModel> result = new();
+
+            foreach (var dog in dogs)
             {
-                int idx = 0;
-                var orderBy = typeof(Dog).GetProperties()
-                    .FirstOrDefault(x => x.Name.ToLower() == pageParams.Attribute.ToLower());
-
-                if (orderBy != null)
-                {
-                    var propName = orderBy.Name;
-
-                    dogs = pageParams.Order == "desc" ?
-                        dogs.OrderByDescending(x => x.GetType().GetProperty(propName).GetValue(x)) :
-                        dogs.OrderBy(x => x.GetType().GetProperty(propName).GetValue(x));
-                }
-                else
-                {
-                    dogs = dogs = pageParams.Order == "desc" ?
-                        dogs.OrderByDescending(x => x.Name) :
-                        dogs.OrderBy(x => x.Name);
-                }
-
-                dogs = dogs.Skip((pageParams.PageNumber - 1) * pageParams.PageSize)
-                    .Take(pageParams.PageSize)
-                    .ToList();
-
-                DogExternalModel[] result = new DogExternalModel[dogs.Count()];
-
-                foreach (var dog in dogs)
-                {
-                    result[idx] = new DogExternalModel { Name = dog.Name, Color = dog.Color, TailLength = dog.TailLength, Weight = dog.Weight };
-                    idx++;
-                }
-
-                return result;
+                result.Add(new DogExternalModel 
+                { 
+                    Name = dog.Name, 
+                    Color = dog.Color, 
+                    TailLength = dog.TailLength, 
+                    Weight = dog.Weight 
+                });
             }
 
-            return null;
+            return result;
         }
+
 
         public async Task<DogExternalModel> CreateDog(DogExternalModel dog)
         {
@@ -75,7 +68,7 @@ namespace DogsAppAPI.Web.Services
                     Weight = dog.Weight
                 };
 
-                var result = await DogsRepo.Create(dogResult);
+                var result = await DogsRepo.CreateAsync(dogResult);
 
                 if (result) return dog;
             }

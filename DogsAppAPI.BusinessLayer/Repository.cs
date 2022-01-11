@@ -2,7 +2,6 @@
 using DogsAppAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,17 +17,12 @@ namespace HappyBusProject.Repositories
             _context = dogsDBContext ?? throw new ArgumentNullException(nameof(dogsDBContext));
         }
 
-        public async Task<T> GetFirstOrDefault(Func<T, bool> predicate)
+        public IQueryable<T> GetAsync()
         {
-            return await Task.Run(() => _context.Set<T>().FirstOrDefault(predicate));
+            return _context.Set<T>().AsNoTracking();
         }
 
-        public async Task<IEnumerable<T>> Get()
-        {
-            return await _context.Set<T>().AsNoTracking().ToListAsync();
-        }
-
-        public async Task<bool> Create(T item)
+        public async Task<bool> CreateAsync(T item)
         {
             _context.Set<T>().Add(item);
             var result = await _context.SaveChangesAsync();

@@ -11,7 +11,7 @@
         public string Order
         {
             get { return _order; }
-            set { _order = (value == "desc") ? _order = value : _order; }
+            set { _order = (value.ToLower() == "desc") ? _order = value.ToLower() : _order; }
         }
 
         public int PageSize
@@ -22,7 +22,7 @@
 
         public int PageNumber
         {
-            get { return _pageNumber;}
+            get { return _pageNumber; }
             set { _pageNumber = (value < 0) ? _pageNumber : value; }
         }
     }

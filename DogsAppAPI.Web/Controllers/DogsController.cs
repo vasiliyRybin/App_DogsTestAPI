@@ -1,7 +1,6 @@
 ﻿using DogsAppAPI.DB;
 using DogsAppAPI.Web.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace DogsAppAPI.Web.Controllers
@@ -22,9 +21,7 @@ namespace DogsAppAPI.Web.Controllers
         public async Task<IActionResult> GetAsync([FromQuery] PageParams pageParams)
         {
             var result = await Service.GetAllDogs(pageParams);
-
-            if (result != null) return Ok(result);
-            return NotFound();
+            return Ok(result);
         }
 
         [Route("Dog")]

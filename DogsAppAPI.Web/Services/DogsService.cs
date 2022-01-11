@@ -1,6 +1,8 @@
 ﻿using DogsAppAPI.DB;
 using DogsAppAPI.Interfaces;
+using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DogsAppAPI.Web.Services
@@ -14,9 +16,9 @@ namespace DogsAppAPI.Web.Services
             DogsRepo = repository;
         }
 
-        public async Task<DogViewModel[]> GetAllDogs(PageParams pageParams)
+        public async Task<DogExternalModel[]> GetAllDogs(PageParams pageParams)
         {
-            AssignDefaultParamsToEmptyFields(pageParams);
+            AssignDefaultParamsToEmptyInputFields(pageParams);
             var dogs = await DogsRepo.Get();
 
             if (dogs.Any())
@@ -44,11 +46,11 @@ namespace DogsAppAPI.Web.Services
                     .Take(pageParams.PageSize)
                     .ToList();
 
-                DogViewModel[] result = new DogViewModel[dogs.Count()];
+                DogExternalModel[] result = new DogExternalModel[dogs.Count()];
 
                 foreach (var dog in dogs)
                 {
-                    result[idx] = new DogViewModel { Name = dog.Name, Color = dog.Color, TailLength = dog.TailLength, Weight = dog.Weight };
+                    result[idx] = new DogExternalModel { Name = dog.Name, Color = dog.Color, TailLength = dog.TailLength, Weight = dog.Weight };
                     idx++;
                 }
 
@@ -58,7 +60,42 @@ namespace DogsAppAPI.Web.Services
             return null;
         }
 
-        private static void AssignDefaultParamsToEmptyFields(PageParams pageParams)
+        public async Task<DogExternalModel> CreateDog(DogExternalModel dog)
+        {
+            var check = CheckInput(dog);
+
+            if (check)
+            {
+                Dog dogResult = new()
+                {
+                    ID = Guid.NewGuid(),
+                    Name = dog.Name,
+                    Color = dog.Color,
+                    TailLength = dog.TailLength,
+                    Weight = dog.Weight
+                };
+
+                var result = await DogsRepo.Create(dogResult);
+
+                if (result) return dog;
+            }
+
+            return null;
+        }
+
+        private static bool CheckInput(DogExternalModel dog)
+        {
+            string pattern = @"^([A-Z]{1}[a-z]{1,10}\b)|^([А-Я]{1}[а-я]{1,10}\b)";
+            if (string.IsNullOrWhiteSpace(dog.Name)) return false;
+            if (string.IsNullOrWhiteSpace(dog.Color)) return false;
+            if (dog.TailLength >= 500 || dog.TailLength < 0) return false;
+            if (dog.Weight <= 0 || dog.Weight >= 100) return false;
+            if (!Regex.Match(dog.Name, pattern).Success) return false;
+
+            return true;
+        }
+
+        private static void AssignDefaultParamsToEmptyInputFields(PageParams pageParams)
         {
             if (string.IsNullOrWhiteSpace(pageParams.Attribute)) pageParams.Attribute = "name";
             if (string.IsNullOrWhiteSpace(pageParams.Order)) pageParams.Order = "asc";

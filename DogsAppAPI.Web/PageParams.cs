@@ -7,16 +7,11 @@
         private int _pageNumber = 1;
         public string Attribute { get; set; }
         private string _order = "asc";
+
         public string Order
         {
-            get
-            {
-                return _order;
-            }
-            set
-            {
-                _order = (value == "desc") ? _order = value : _order;
-            }
+            get { return _order; }
+            set { _order = (value == "desc") ? _order = value : _order; }
         }
 
         public int PageSize
@@ -27,14 +22,8 @@
 
         public int PageNumber
         {
-            get
-            {
-                return _pageNumber;
-            }
-            set
-            {
-                _pageNumber = (value < 0) ? _pageNumber : value;
-            }
+            get { return _pageNumber;}
+            set { _pageNumber = (value < 0) ? _pageNumber : value; }
         }
     }
 }

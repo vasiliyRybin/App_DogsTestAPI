@@ -1,10 +1,11 @@
-﻿using DogsAppAPI.Web.Services;
+﻿using DogsAppAPI.DB;
+using DogsAppAPI.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DogsAppAPI.Web.Controllers
 {
-    [Route("Dogs")]
     [ApiController]
     public class DogsController : ControllerBase
     {
@@ -15,6 +16,8 @@ namespace DogsAppAPI.Web.Controllers
             Service = service;
         }
 
+
+        [Route("Dogs")]
         [HttpGet]
         public async Task<IActionResult> GetAsync([FromQuery] PageParams pageParams)
         {
@@ -22,6 +25,16 @@ namespace DogsAppAPI.Web.Controllers
 
             if (result != null) return Ok(result);
             return NotFound();
+        }
+
+        [Route("Dog")]
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] DogExternalModel dog)
+        {
+            var result = await Service.CreateDog(dog);
+
+            if (result != null) return Ok(result);
+            return Conflict();
         }
     }
 }

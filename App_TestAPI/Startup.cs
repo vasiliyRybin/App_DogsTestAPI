@@ -1,9 +1,11 @@
+using AspNetCoreRateLimit;
 using DogsAppAPI.DB.Models;
 using DogsAppAPI.Interfaces;
 using DogsAppAPI.Web.Services;
 using HappyBusProject.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,6 +26,12 @@ namespace App_TestAPI
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddOptions();
+            services.AddMemoryCache();
+            services.Configure<IpRateLimitOptions>(Configuration.GetSection("IpRateLimiting"));
+            services.Configure<IpRateLimitPolicies>(Configuration.GetSection("IpRateLimitPolicies"));
+            services.AddInMemoryRateLimiting();
+
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -36,11 +44,14 @@ namespace App_TestAPI
 
             services.AddTransient(typeof(IRepository<>), typeof(Repository<>));
             services.AddTransient<DogsService>();
+            services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
         }
 
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
+            app.UseIpRateLimiting();
+
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();

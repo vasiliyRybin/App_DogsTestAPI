@@ -1,6 +1,6 @@
 ﻿namespace DogsAppAPI.DB
 {
-    public class DogViewModel
+    public class DogExternalModel
     {
         public string Name { get; set; }
         public string Color { get; set; }

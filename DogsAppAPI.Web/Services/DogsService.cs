@@ -14,14 +14,37 @@ namespace DogsAppAPI.Web.Services
             DogsRepo = repository;
         }
 
-        public async Task<DogViewModel[]> GetAllDogs()
+        public async Task<DogViewModel[]> GetAllDogs(PageParams pageParams)
         {
+            AssignDefaultParamsToEmptyFields(pageParams);
             var dogs = await DogsRepo.Get();
 
             if (dogs.Any())
             {
-                DogViewModel[] result = new DogViewModel[dogs.Count()];
                 int idx = 0;
+                var orderBy = typeof(Dog).GetProperties()
+                    .FirstOrDefault(x => x.Name.ToLower() == pageParams.Attribute.ToLower());
+
+                if (orderBy != null)
+                {
+                    var propName = orderBy.Name;
+
+                    dogs = pageParams.Order == "desc" ?
+                        dogs.OrderByDescending(x => x.GetType().GetProperty(propName).GetValue(x)) :
+                        dogs.OrderBy(x => x.GetType().GetProperty(propName).GetValue(x));
+                }
+                else
+                {
+                    dogs = dogs = pageParams.Order == "desc" ?
+                        dogs.OrderByDescending(x => x.Name) :
+                        dogs.OrderBy(x => x.Name);
+                }
+
+                dogs = dogs.Skip((pageParams.PageNumber - 1) * pageParams.PageSize)
+                    .Take(pageParams.PageSize)
+                    .ToList();
+
+                DogViewModel[] result = new DogViewModel[dogs.Count()];
 
                 foreach (var dog in dogs)
                 {
@@ -33,6 +56,12 @@ namespace DogsAppAPI.Web.Services
             }
 
             return null;
+        }
+
+        private static void AssignDefaultParamsToEmptyFields(PageParams pageParams)
+        {
+            if (string.IsNullOrWhiteSpace(pageParams.Attribute)) pageParams.Attribute = "name";
+            if (string.IsNullOrWhiteSpace(pageParams.Order)) pageParams.Order = "asc";
         }
     }
 }

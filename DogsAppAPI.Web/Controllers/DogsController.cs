@@ -16,9 +16,9 @@ namespace DogsAppAPI.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAsync()
+        public async Task<IActionResult> GetAsync([FromQuery] PageParams pageParams)
         {
-            var result = await Service.GetAllDogs();
+            var result = await Service.GetAllDogs(pageParams);
 
             if (result != null) return Ok(result);
             return NotFound();

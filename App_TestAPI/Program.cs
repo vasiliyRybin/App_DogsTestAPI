@@ -2,7 +2,6 @@ using DogsAppAPI.DB.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using System;
 
 namespace App_TestAPI
@@ -12,6 +11,7 @@ namespace App_TestAPI
         public static void Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
+
             using (var scope = host.Services.CreateScope())
             {
                 var services = scope.ServiceProvider;
@@ -21,12 +21,12 @@ namespace App_TestAPI
                     var context = services.GetRequiredService<DogsDbContext>();
                     SampleDogs.Initialize(context);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred seeding the DB.");
+                    throw;
                 }
             }
+
             host.Run();
         }
 

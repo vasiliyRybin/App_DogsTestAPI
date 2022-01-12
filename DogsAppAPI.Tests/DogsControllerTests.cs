@@ -1,34 +1,100 @@
 using DogsAppAPI.DB;
 using DogsAppAPI.Interfaces;
+using DogsAppAPI.Web;
+using DogsAppAPI.Web.Services;
 using Moq;
-using System;
-using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace DogsAppAPI.Tests
 {
     public class DogsControllerTests
     {
-        private static IEnumerable<Dog> InitializeRepository()
-        {
-            Guid firstDog = Guid.Parse("F9F61F25-BA4E-4A35-3544-08D9D2356056");
-            Guid secondDog = Guid.Parse("68F6A880-4743-43DB-3545-08D9D2356056");
-            Guid thirdDog = Guid.Parse("584560BF-8446-48D6-8F6E-4BEAC9EFB646");
 
-            return new List<Dog>
-            {
-                new Dog{ ID = firstDog, Color = "Black", Name = "Phobos", TailLength = 10, Weight = 65},
-                new Dog{ ID = secondDog, Color = "Amber", Name = "Jack", TailLength = 25, Weight = 30},
-                new Dog{ ID = thirdDog, Color = "White", Name = "Vincent", TailLength = 45, Weight = 39},
-            };
+        [Fact]
+        public void GetAllDogs_DefaultPageParams_OrderedByNameAsync()
+        {
+            var data = DogsTestMethods.InitializeRepository();
+            var pageParams = new PageParams();
+            var orderedDogs = DogsTestMethods.GetOrderedListByAttribute(data, pageParams);
+
+            Mock<IRepository<Dog>> DogRepo = new();
+            DogRepo.Setup(c => c.Get()).Returns(data.AsQueryable());
+            var controller = new DogsService(DogRepo.Object);
+
+
+            var result = controller.GetAllDogs(pageParams, true).Result;
+            bool isEqual = DogsTestMethods.ObjectsComparer(orderedDogs, result);
+
+
+            Assert.Equal(orderedDogs.Count, result.Count);
+            Assert.True(isEqual);
         }
 
         [Fact]
-        public void GetAllDogs_CheckOutputType_InputCountEqualsOutputCount()
+        public void GetAllDogs_SortingDesc_IsEqualCollection()
         {
-            var data = InitializeRepository();
+            var data = DogsTestMethods.InitializeRepository();
+            var pageParams = new PageParams() { Order = "desc" };
+            var orderedDogs = DogsTestMethods.GetOrderedListByAttribute(data, pageParams);
+
             Mock<IRepository<Dog>> DogRepo = new();
-            //DogRepo.Setup(c => c.GetAsync().Result).Returns(data);
+            DogRepo.Setup(c => c.Get()).Returns(data.AsQueryable());
+            var controller = new DogsService(DogRepo.Object);
+
+            var result = controller.GetAllDogs(pageParams, true).Result;
+            bool isEqual = DogsTestMethods.ObjectsComparer(orderedDogs, result);
+
+            Assert.Equal(orderedDogs.Count, result.Count);
+            Assert.True(isEqual);
+        }
+
+        [Fact]
+        public void GetAllDogs_FilledWrongParams_IsEmptyCollections()
+        {
+            var data = DogsTestMethods.InitializeRepository();
+            var pageParams = new PageParams() { Order = "ASCENING", Attribute = "Calar", PageNumber = 100500, PageSize = 20000 };
+            var orderedDogs = DogsTestMethods.GetOrderedListByAttribute(data, pageParams);
+
+            Mock<IRepository<Dog>> DogRepo = new();
+            DogRepo.Setup(c => c.Get()).Returns(data.AsQueryable());
+            var controller = new DogsService(DogRepo.Object);
+
+            var result = controller.GetAllDogs(pageParams, true).Result;
+            bool isEqual = DogsTestMethods.ObjectsComparer(orderedDogs, result);
+
+            Assert.Equal(orderedDogs.Count, result.Count);
+            Assert.True(isEqual);
+        }
+
+        [Fact]
+        public async Task CreateDog_CorrectInputParams_DogCreatedAsync()
+        {
+            var newDog = new DogExternalModel { Color = "Green", Name = "Orcdog", TailLength = 72, Weight = 78 };
+
+            Mock<IRepository<Dog>> DogRepo = new();
+            DogRepo.Setup(c => c.CreateAsync(It.IsAny<Dog>()).Result).Returns(true);
+            var controller = new DogsService(DogRepo.Object);
+
+            var result = await controller.CreateDog(newDog);
+
+            Assert.NotNull(result);
+            Assert.IsType<DogExternalModel>(result);
+        }
+
+        [Fact]
+        public async Task CreateDog_WrongWeight_NotCreated()
+        {
+            var newDog = new DogExternalModel { Color = "Blue", Name = "BadDog", TailLength = 150, Weight = -20 };
+
+            Mock<IRepository<Dog>> DogRepo = new();
+            DogRepo.Setup(c => c.CreateAsync(It.IsAny<Dog>()).Result).Returns(false);
+            var controller = new DogsService(DogRepo.Object);
+
+            var result = await controller.CreateDog(newDog);
+
+            Assert.Null(result);
         }
     }
 }

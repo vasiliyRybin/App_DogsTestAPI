@@ -6,7 +6,7 @@ namespace DogsAppAPI.Interfaces
     public interface IRepository<T>
         where T : class
     {
-        IQueryable<T> GetAsync();
+        IQueryable<T> Get();
         Task<bool> CreateAsync(T item);
     }
 }

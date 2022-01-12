@@ -17,7 +17,7 @@ namespace HappyBusProject.Repositories
             _context = dogsDBContext ?? throw new ArgumentNullException(nameof(dogsDBContext));
         }
 
-        public IQueryable<T> GetAsync()
+        public IQueryable<T> Get()
         {
             return _context.Set<T>().AsNoTracking();
         }

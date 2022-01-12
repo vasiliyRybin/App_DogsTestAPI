@@ -8,6 +8,14 @@
         public string Attribute { get; set; }
         private string _order = "asc";
 
+        public PageParams()
+        {
+            Attribute = "Name";
+            Order = "asc";
+            PageSize = 10;
+            PageNumber = 1;
+        }
+
         public string Order
         {
             get { return _order; }
